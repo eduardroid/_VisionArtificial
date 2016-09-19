@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import com.jfoenix.controls.*?>
+<?import javafx.scene.image.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPaneID" prefHeight="455.0" prefWidth="655.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.vision.artificial.FXMLDemoController">
+   <children>
+      <TabPane fx:id="tbDemo" layoutX="107.0" layoutY="41.0" prefHeight="685.0" prefWidth="985.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <tabs>
+          <Tab text="Adquisición">
+               <content>
+                  <BorderPane fx:id="bpAdquisicion">
+                     <bottom>
+                        <HBox alignment="CENTER" prefHeight="80.0" prefWidth="655.0" BorderPane.alignment="CENTER">
+                           <children>
+                              <JFXButton fx:id="btnCargarImagen" onAction="#loadImage" prefHeight="40.0" prefWidth="110.0" style="-fx-background-color: #FF9800;" text="Subir Imagen" textFill="WHITE">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </JFXButton>
+                              <JFXButton onAction="#siguienteTab" prefHeight="40.0" prefWidth="110.0" style="-fx-background-color: #959595;-fx-margin-left:10px;" text="Siguiente" textFill="WHITE">
+                                  <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </JFXButton>
+                           </children>
+                        </HBox>
+                     </bottom>
+                     <center>
+                        <VBox fx:id="vbImagenOriginal" alignment="CENTER" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER" />
+                     </center>
+                  </BorderPane>
+               </content>
+          </Tab>
+          <Tab text="Pre-procesamiento">
+               <content>
+                  <BorderPane fx:id="bpPreProcesamiento">
+                    <bottom>
+                      <HBox alignment="CENTER" prefHeight="80.0" prefWidth="655.0" BorderPane.alignment="CENTER">
+                         <children>
+                            <!--JFXButton fx:id="btnCargarImagen" onAction="#loadImage" prefHeight="40.0" prefWidth="110.0" style="-fx-background-color: #FF9800;" text="Subir Imagen" textFill="WHITE">
+                               <font>
+                                  <Font size="14.0" />
+                               </font>
+                            </JFXButton-->
+                            <JFXButton onAction="#siguienteTab" prefHeight="40.0" prefWidth="110.0" style="-fx-background-color: #959595;-fx-margin-left:10px;" text="Siguiente" textFill="WHITE">
+                                <font>
+                                  <Font size="14.0" />
+                               </font>
+                            </JFXButton>
+                         </children>
+                      </HBox>
+                   </bottom>
+                   <center>
+                      <HBox fx:id="hbImagenPreProcesada" alignment="CENTER" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER" />
+                   </center>
+                  </BorderPane>
+               </content>
+          </Tab>
+          <Tab text="Op. Morfológicas">
+              <content>
+                  <BorderPane fx:id="bpSegmentacion">
+                    <bottom>
+                      <HBox alignment="CENTER" prefHeight="80.0" prefWidth="655.0" BorderPane.alignment="CENTER">
+                         <children>
+                              <JFXButton fx:id="btnErosionar" onAction="#ErosionarImagen" prefHeight="40.0" prefWidth="110.0" style="-fx-background-color: #FF9800;" text="Erosionar" textFill="WHITE">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </JFXButton>
+                              <JFXButton fx:id="btnSegmentar1" layoutX="228.0" layoutY="30.0" onAction="#DilatarImagen" prefHeight="40.0" prefWidth="110.0" style="-fx-background-color: #959800;" text="Dilatar" textFill="WHITE">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </JFXButton>
+                            <!--JFXButton fx:id="btnCargarImagen" onAction="#loadImage" prefHeight="40.0" prefWidth="110.0" style="-fx-background-color: #FF9800;" text="Subir Imagen" textFill="WHITE">
+                               <font>
+                                  <Font size="14.0" />
+                               </font>
+                            </JFXButton-->
+                            <JFXButton onAction="#siguienteTab" prefHeight="40.0" prefWidth="110.0" style="-fx-background-color: #959595;-fx-margin-left:10px;" text="Siguiente" textFill="WHITE">
+                                <font>
+                                  <Font size="14.0" />
+                               </font>
+                            </JFXButton>
+                         </children>
+                      </HBox>
+                   </bottom>
+                     <top>
+                        <GridPane BorderPane.alignment="CENTER">
+                          <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                          </columnConstraints>
+                          <rowConstraints>
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                          </rowConstraints>
+                           <children>
+                              <Label text="HSV / Canales" />
+                              <Label text="Erosión" GridPane.columnIndex="1" />
+                              <Label text="Dilatación" GridPane.columnIndex="2" />
+                           </children>
+                        </GridPane>
+                     </top>
+                     <center>
+                        <GridPane fx:id="gPaneSegmentar" BorderPane.alignment="CENTER">
+                          <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                          </columnConstraints>
+                          <rowConstraints>
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                          </rowConstraints>
+                        </GridPane>
+                     </center>
+                  </BorderPane>
+               </content>
+          </Tab>
+            <Tab text="Segmentación">
+               <content>
+                  <BorderPane prefHeight="200.0" prefWidth="200.0">
+                     <bottom>
+                        <JFXButton onAction="#siguienteTab" prefHeight="40.0" prefWidth="110.0" style="-fx-background-color: #959595;-fx-margin-left:10px;" text="Siguiente" textFill="WHITE" BorderPane.alignment="CENTER">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </JFXButton>
+                     </bottom>
+                     <center>
+                        <HBox fx:id="hbImagenSegmentada" prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+                     </center>
+                  </BorderPane>
+               </content>
+            </Tab> 
+            <Tab text="Descripción">
+               <content>
+                  <BorderPane prefHeight="200.0" prefWidth="200.0">
+                     <bottom>
+                        <JFXButton onAction="#siguienteTab" prefHeight="40.0" prefWidth="110.0" style="-fx-background-color: #959595;-fx-margin-left:10px;" text="Siguiente" textFill="WHITE" BorderPane.alignment="CENTER">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </JFXButton>
+                     </bottom>
+                     <center>
+                        <HBox prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+                     </center>
+                  </BorderPane>
+               </content></Tab>
+            <Tab text="Reconocimiento" />
+            <Tab text="Interpretación" />
+            <Tab text="Histogramas">
+               <content>
+                  <Accordion>
+                    <panes>
+                      <TitledPane animated="false" text="Histograma  //Limón sano - escala de gris">
+                        <content>
+                          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                        </content>
+                      </TitledPane>
+                      <TitledPane animated="false" text="Histograma //Limón golpeado - escala de gris">
+                        <content>
+                          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                        </content>
+                      </TitledPane>
+                      <TitledPane animated="false" text="Histograma //Limon golpeado - imagen segmentada">
+                        <content>
+                          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                        </content>
+                      </TitledPane>
+                        <TitledPane animated="false" text="Histograma //Limón sano - imagen segmentadagris">
+                           <content>
+                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                           </content>
+                        </TitledPane>
+                        <TitledPane animated="false" text="Histograma //Limón golpeado - fondo=0">
+                           <content>
+                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                           </content>
+                        </TitledPane>
+                        <TitledPane animated="false" text="Histograma //Limón sano - fondo=0">
+                           <content>
+                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                           </content>
+                        </TitledPane>
+                    </panes>
+                  </Accordion>
+               </content>
+            </Tab>
+        </tabs>
+      </TabPane>
+   </children>
+</AnchorPane>

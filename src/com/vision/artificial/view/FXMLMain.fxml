@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import com.jfoenix.controls.*?>
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane id="BorderPane" prefHeight="700.0" prefWidth="1000.0" style="-fx-background-color: #ffffff;" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.vision.artificial.FXMLMainController">
+   <center>
+   
+         <Label alignment="CENTER" prefHeight="115.0" prefWidth="426.0" text="Sistema de visión artificial para la clasificación de limones" textAlignment="CENTER" textOverrun="WORD_ELLIPSIS" wrapText="true" BorderPane.alignment="CENTER">
+            <font>
+               <Font name="Roboto Light" size="22.0" />
+            </font>
+         </Label>
+   </center>
+   <top>
+      <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+         <items>
+            <JFXButton fx:id="btnDemo" onAction="#btnDemoAction" prefHeight="31.0" prefWidth="102.0" style="-fx-background-color: #D50C0C;" text="Demo" textAlignment="CENTER" textFill="WHITE">
+               <font>
+                  <Font name="Roboto Light" size="15.0" />
+               </font>
+            </JFXButton>
+            <JFXButton fx:id="btnEjecutar" onAction="#btnEjecutarAction" prefHeight="31.0" prefWidth="101.0" style="-fx-background-color: #D50C0C;" text="Ejecutar" textFill="WHITE">
+               <font>
+                  <Font size="15.0" />
+               </font>
+            </JFXButton>
+         </items>
+      </ToolBar>
+   </top>
+ 
+</BorderPane>
