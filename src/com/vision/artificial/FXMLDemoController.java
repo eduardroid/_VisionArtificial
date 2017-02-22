@@ -220,10 +220,10 @@ public class FXMLDemoController{
         ivErosionS.setImage(this.mat2Image(mImgErodeS));
         ivErosionV.setImage(this.mat2Image(mImgErodeV));
 
-        ivErosion.setFitWidth(300);
-        ivErosionH.setFitWidth(300);
-        ivErosionS.setFitWidth(300);
-        ivErosionV.setFitWidth(300);
+        ivErosion.setFitWidth(200);
+        ivErosionH.setFitWidth(200);
+        ivErosionS.setFitWidth(200);
+        ivErosionV.setFitWidth(200);
         
         ivErosion.setPreserveRatio(true);
         ivErosionH.setPreserveRatio(true);
@@ -261,10 +261,10 @@ public class FXMLDemoController{
         ivDilatarS.setImage(this.mat2Image(mImgDilatarS));
         ivDilatarV.setImage(this.mat2Image(mImgDilatarV));
 
-        ivDilatar.setFitWidth(300);
-        ivDilatarH.setFitWidth(300);
-        ivDilatarS.setFitWidth(300);
-        ivDilatarV.setFitWidth(300);
+        ivDilatar.setFitWidth(200);
+        ivDilatarH.setFitWidth(200);
+        ivDilatarS.setFitWidth(200);
+        ivDilatarV.setFitWidth(200);
         
         ivDilatar.setPreserveRatio(true);
         ivDilatarH.setPreserveRatio(true);
@@ -278,20 +278,18 @@ public class FXMLDemoController{
     }
     @FXML
     protected void SegmentarImagen() throws IOException {
-        int scale = 1, delta = 0,ddepth = CV_16S;
+        int scale = 1, delta = -10,ddepth = CV_16S;
         
         Mat grad_x = new Mat(), grad_y = new Mat();
-        
         Mat abs_grad_x =new Mat(), abs_grad_y =new Mat();
-        
-        double d=3;
         
         ImageView ivlGrayScaleImage = new ImageView();
         this.lstCanalesHSV= new ArrayList<>();
         Core.split(this.mImagenPreProcesada,lstCanalesHSV);
         
         Mat mImagenSuavizada = new Mat();
-        Mat mImagenSegmentadaLocal = new Mat();
+        Mat mImagenSegmentadaLocal = new Mat();        
+        Mat mImagenBinarizadaLocal = new Mat();
         Mat mImagenSalidaInRange = new Mat();    
         Mat mClonImagenReal = this.mImagenReal;
 
@@ -301,41 +299,48 @@ public class FXMLDemoController{
         //Core.inRange(this.mImagenPreProcesada, new Scalar(53, 87,43), new Scalar(159, 255, 178), mImagenSalidaInRange);
         
         Imgproc.GaussianBlur( this.mImagenGris, mImagenSuavizada, this.s ,0,0, BORDER_DEFAULT );
-        Imgproc.Sobel(mImagenSuavizada, grad_x ,ddepth,1,0,3,scale,delta,Core.BORDER_DEFAULT);        
-        Imgproc.Sobel(mImagenSuavizada, grad_y ,ddepth,0,1,3,scale,delta,Core.BORDER_DEFAULT);
-        convertScaleAbs( grad_x, abs_grad_x );
-        convertScaleAbs( grad_y, abs_grad_y );
-        Core.addWeighted (abs_grad_x, 0.5, abs_grad_y, 0.5, 0, mImagenSegmentadaLocal);
-        Imgcodecs.imwrite(strRutaResources+"img/sobel.jpg",mImagenSegmentadaLocal);
+        Imgproc.threshold(mImagenSuavizada, mImagenBinarizadaLocal, 127, 255, Imgproc.THRESH_TOZERO);
         
+        //sobel
+        Imgproc.Sobel(mImagenBinarizadaLocal, grad_x ,ddepth,1,0,3,scale,delta,Core.BORDER_DEFAULT);  
+        convertScaleAbs( grad_x, abs_grad_x );
+        Imgproc.Sobel(mImagenBinarizadaLocal, grad_y ,ddepth,0,1,3,scale,delta,Core.BORDER_DEFAULT);
+        convertScaleAbs( grad_y, abs_grad_y );
+        
+        Core.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, mImagenSegmentadaLocal);
+        
+        
+        
+        Imgcodecs.imwrite(strRutaResources+"img/sobel.jpg",mImagenSegmentadaLocal);
+        //cany
+        //Imgproc.Canny(mImagenSuavizada, mImagenSuavizada ,100,700,5,true);        
+        //Imgcodecs.imwrite(strRutaResources+"img/canny.jpg",mImagenSuavizada);
+
         Mat circles= new Mat();
         int minRadius = 10;//10
 	int maxRadius = 290;//18
         Imgproc.HoughCircles(mImagenSegmentadaLocal, circles,Imgproc.CV_HOUGH_GRADIENT,1, 
                             200, 150, 30, minRadius, maxRadius);
-        //Imgproc.HoughCircles(mImagenSalidaInRange, circles,Imgproc.CV_HOUGH_GRADIENT,1, minRadius, 120, 10, minRadius, maxRadius);
+        //Imgproc.HoughCircles(mImagenSegmentadaLocal, circles,Imgproc.CV_HOUGH_GRADIENT,1, minRadius, 120, 10, minRadius, maxRadius);
 
         for( int i = 0; i < circles.cols(); i++ )
 	{
             double vCircle[]=circles.get(0,i);
             Point center=new Point(Math.round(vCircle[0]), Math.round(vCircle[1]));
             int radius = (int)Math.round(vCircle[2]);
-            /*Point center= new Po(cvRound(circles[i][0]), cvRound(circles[i][1]));
-            int radius = cvRound(circles[i][2]); */   
             // draw the circle center
             Imgproc.circle(mClonImagenReal, center, 3,new Scalar(0,255,0), -1, 8, 0 );
             //(mImagenSuavizada, center, 3,sc1new Scalar(0,255,0), -1, 8, 0 )
             // draw the circle outline
             Imgproc.circle(mClonImagenReal, center, radius, new Scalar(0,0,255),3, 8, 0 );
-            
-            System.out.println(vCircle[0]+" : "+vCircle[1]+" : "+vCircle[2]);
+            System.out.println(vCircle[0]+" : "+vCircle[1]+" : "+vCircle[2]);//el tercero es el radio en px
 	}
         Imgcodecs.imwrite(strRutaResources+"img/deteccionCirculo.jpg",mClonImagenReal);
         //fin dibujar circulos
         System.out.println("circulos: "+ circles.cols());
         System.out.println(mImagenSalidaInRange.rows()/8);
         ivlGrayScaleImage.setImage(this.mat2Image(this.lstCanalesHSV.get(2)));
-        this.ivImagenSegmentada.setImage(this.mat2Image(mImagenSegmentadaLocal));
+        this.ivImagenSegmentada.setImage(this.mat2Image(mImagenSegmentadaLocal));//mImagenSegmentadaLocal
         this.ivImagenCirculos.setImage(this.mat2Image(mClonImagenReal));
         //this.ivImagenSegmentada.fitHeightProperty().bind(this.hbImagenSegmentada.heightProperty());
         //this.ivImagenPreProcesada.fitHeightProperty().bind(this.hbImagenSegmentada.heightProperty());
@@ -393,10 +398,15 @@ public class FXMLDemoController{
         this.ivImagenS.setImage(this.mat2Image(lstCanalesHSV.get(1)));
         this.ivImagenV.setImage(this.mat2Image(lstCanalesHSV.get(2)));
 
-        this.ivImagenPreProcesada.setFitWidth(300);
-        this.ivImagenH.setFitWidth(300);
-        this.ivImagenS.setFitWidth(300);
-        this.ivImagenV.setFitWidth(300);
+        this.ivImagenPreProcesada.setFitWidth(200);
+        this.ivImagenH.setFitWidth(200);
+        this.ivImagenS.setFitWidth(200);
+        this.ivImagenV.setFitWidth(200);
+        
+//        this.ivImagenPreProcesada.set
+//        this.ivImagenH.setFitHeight(300);
+//        this.ivImagenS.setFitHeight(300);
+//        this.ivImagenV.setFitHeight(300);
         
         this.ivImagenPreProcesada.setPreserveRatio(true);
         this.ivImagenH.setPreserveRatio(true);

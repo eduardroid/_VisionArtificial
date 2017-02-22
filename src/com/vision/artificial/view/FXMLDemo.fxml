@@ -11,7 +11,7 @@
 
 <AnchorPane id="AnchorPaneID" prefHeight="455.0" prefWidth="655.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.vision.artificial.FXMLDemoController">
    <children>
-      <TabPane fx:id="tbDemo" layoutX="107.0" layoutY="41.0" prefHeight="685.0" prefWidth="985.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <TabPane fx:id="tbDemo" layoutX="107.0" layoutY="41.0" prefHeight="455.0" prefWidth="655.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <tabs>
           <Tab text="Adquisición">
                <content>
@@ -160,44 +160,6 @@
                </content></Tab>
             <Tab text="Reconocimiento" />
             <Tab text="Interpretación" />
-            <Tab text="Histogramas">
-               <content>
-                  <Accordion>
-                    <panes>
-                      <TitledPane animated="false" text="Histograma  //Limón sano - escala de gris">
-                        <content>
-                          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-                        </content>
-                      </TitledPane>
-                      <TitledPane animated="false" text="Histograma //Limón golpeado - escala de gris">
-                        <content>
-                          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-                        </content>
-                      </TitledPane>
-                      <TitledPane animated="false" text="Histograma //Limon golpeado - imagen segmentada">
-                        <content>
-                          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-                        </content>
-                      </TitledPane>
-                        <TitledPane animated="false" text="Histograma //Limón sano - imagen segmentadagris">
-                           <content>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-                           </content>
-                        </TitledPane>
-                        <TitledPane animated="false" text="Histograma //Limón golpeado - fondo=0">
-                           <content>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-                           </content>
-                        </TitledPane>
-                        <TitledPane animated="false" text="Histograma //Limón sano - fondo=0">
-                           <content>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-                           </content>
-                        </TitledPane>
-                    </panes>
-                  </Accordion>
-               </content>
-            </Tab>
         </tabs>
       </TabPane>
    </children>
