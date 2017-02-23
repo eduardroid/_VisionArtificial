@@ -72,6 +72,8 @@ public class FXMLDemoController{
     @FXML
     private final ImageView ivImagenCirculos;
     @FXML
+    private HBox hbImagenDescripcion;
+    @FXML
     private Button btnCargarImagen;
     
     @FXML 
@@ -90,7 +92,9 @@ public class FXMLDemoController{
     private final FileChooser fileChooser;
     private Mat mImagenReal;   
     private Mat mImagenGris;   
-    private Mat mImagenPreProcesada;
+    private Mat mImagenPreProcesada;    
+    private Mat mImagenBinarizada;
+
     private final List<Mat> planes;
     private final Mat complexImage;  
     private final String strRutaResources;
@@ -169,13 +173,13 @@ public class FXMLDemoController{
         switch (i)
         {
             case 1:
-                PreProcesar();
+                PreProcesar(); //se aplicara binarizacion
                 break;
             case 2:
-                FaseOpeMorfologica();
+                SegmentarImagen();//esto ira dentro de segmentaciónFaseOpeMorfologica();
                 break;
             case 3:
-                SegmentarImagen();
+                DescribirImagen();//aqui se encontrara el circulo a partir de la binarizada, erosionada y dilatada
                 break;
             case 4:
                 //1. analizar forma
@@ -235,6 +239,7 @@ public class FXMLDemoController{
         this.gPaneSegmentar.add(ivErosionS, 1, 2);        
         this.gPaneSegmentar.add(ivErosionV, 1, 3);
     }
+    
     @FXML
     private void DilatarImagen() {
         ImageView ivDilatar = new ImageView();        
@@ -276,87 +281,7 @@ public class FXMLDemoController{
         this.gPaneSegmentar.add(ivDilatarS, 2, 2);        
         this.gPaneSegmentar.add(ivDilatarV, 2, 3);
     }
-    @FXML
-    protected void SegmentarImagen() throws IOException {
-        int scale = 1, delta = -10,ddepth = CV_16S;
-        
-        Mat grad_x = new Mat(), grad_y = new Mat();
-        Mat abs_grad_x =new Mat(), abs_grad_y =new Mat();
-        
-        ImageView ivlGrayScaleImage = new ImageView();
-        this.lstCanalesHSV= new ArrayList<>();
-        Core.split(this.mImagenPreProcesada,lstCanalesHSV);
-        
-        Mat mImagenSuavizada = new Mat();
-        Mat mImagenSegmentadaLocal = new Mat();        
-        Mat mImagenBinarizadaLocal = new Mat();
-        Mat mImagenSalidaInRange = new Mat();    
-        Mat mClonImagenReal = this.mImagenReal;
-
-        //this.lstCanalesHSV.get(2);
-        mImagenSalidaInRange=this.lstCanalesHSV.get(2);//this.mImagenPreProcesada;
-        //Imgproc.cvtColor(this.mImagenPreProcesada, mImagenSalidaInRange, Imgproc);
-        //Core.inRange(this.mImagenPreProcesada, new Scalar(53, 87,43), new Scalar(159, 255, 178), mImagenSalidaInRange);
-        
-        Imgproc.GaussianBlur( this.mImagenGris, mImagenSuavizada, this.s ,0,0, BORDER_DEFAULT );
-        Imgproc.threshold(mImagenSuavizada, mImagenBinarizadaLocal, 127, 255, Imgproc.THRESH_TOZERO);
-        
-        //sobel
-        Imgproc.Sobel(mImagenBinarizadaLocal, grad_x ,ddepth,1,0,3,scale,delta,Core.BORDER_DEFAULT);  
-        convertScaleAbs( grad_x, abs_grad_x );
-        Imgproc.Sobel(mImagenBinarizadaLocal, grad_y ,ddepth,0,1,3,scale,delta,Core.BORDER_DEFAULT);
-        convertScaleAbs( grad_y, abs_grad_y );
-        
-        Core.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, mImagenSegmentadaLocal);
-        
-        
-        
-        Imgcodecs.imwrite(strRutaResources+"img/sobel.jpg",mImagenSegmentadaLocal);
-        //cany
-        //Imgproc.Canny(mImagenSuavizada, mImagenSuavizada ,100,700,5,true);        
-        //Imgcodecs.imwrite(strRutaResources+"img/canny.jpg",mImagenSuavizada);
-
-        Mat circles= new Mat();
-        int minRadius = 10;//10
-	int maxRadius = 290;//18
-        Imgproc.HoughCircles(mImagenSegmentadaLocal, circles,Imgproc.CV_HOUGH_GRADIENT,1, 
-                            200, 150, 30, minRadius, maxRadius);
-        //Imgproc.HoughCircles(mImagenSegmentadaLocal, circles,Imgproc.CV_HOUGH_GRADIENT,1, minRadius, 120, 10, minRadius, maxRadius);
-
-        for( int i = 0; i < circles.cols(); i++ )
-	{
-            double vCircle[]=circles.get(0,i);
-            Point center=new Point(Math.round(vCircle[0]), Math.round(vCircle[1]));
-            int radius = (int)Math.round(vCircle[2]);
-            // draw the circle center
-            Imgproc.circle(mClonImagenReal, center, 3,new Scalar(0,255,0), -1, 8, 0 );
-            //(mImagenSuavizada, center, 3,sc1new Scalar(0,255,0), -1, 8, 0 )
-            // draw the circle outline
-            Imgproc.circle(mClonImagenReal, center, radius, new Scalar(0,0,255),3, 8, 0 );
-            System.out.println(vCircle[0]+" : "+vCircle[1]+" : "+vCircle[2]);//el tercero es el radio en px
-	}
-        Imgcodecs.imwrite(strRutaResources+"img/deteccionCirculo.jpg",mClonImagenReal);
-        //fin dibujar circulos
-        System.out.println("circulos: "+ circles.cols());
-        System.out.println(mImagenSalidaInRange.rows()/8);
-        ivlGrayScaleImage.setImage(this.mat2Image(this.lstCanalesHSV.get(2)));
-        this.ivImagenSegmentada.setImage(this.mat2Image(mImagenSegmentadaLocal));//mImagenSegmentadaLocal
-        this.ivImagenCirculos.setImage(this.mat2Image(mClonImagenReal));
-        //this.ivImagenSegmentada.fitHeightProperty().bind(this.hbImagenSegmentada.heightProperty());
-        //this.ivImagenPreProcesada.fitHeightProperty().bind(this.hbImagenSegmentada.heightProperty());
-        this.ivImagenPreProcesada.setFitWidth(300);
-        this.ivImagenSegmentada.setFitWidth(300);
-        this.ivImagenCirculos.setFitWidth(300);
-        ivlGrayScaleImage.setFitWidth(300);        
-        ivlGrayScaleImage.setPreserveRatio(true);    
-        this.ivImagenSegmentada.setPreserveRatio(true);   
-        this.ivImagenCirculos.setPreserveRatio(true);   
-
-        hbImagenSegmentada.getChildren().add(this.ivImagenPreProcesada);
-        hbImagenSegmentada.getChildren().add(ivlGrayScaleImage);
-        hbImagenSegmentada.getChildren().add(this.ivImagenSegmentada);
-        hbImagenSegmentada.getChildren().add(this.ivImagenCirculos);
-    }
+    
     
     private void PreProcesar() throws IOException {
         BufferedImage bfImage=ImageIO.read(this.file);
@@ -366,15 +291,23 @@ public class FXMLDemoController{
         mImgRealLocal.put(0, 0, data);
         
         Mat mImgHSVLocal = new Mat(bfImage.getHeight(), bfImage.getWidth(), CvType.CV_8UC3);
-        
-        //Mat mImagenSegmentada = new Mat(bfImage.getHeight(), bfImage.getWidth(), CvType.CV_8UC3);
-        
+       
+
         Imgproc.cvtColor(mImgRealLocal, mImgHSVLocal, Imgproc.COLOR_RGB2HSV);
-        Imgcodecs.imwrite(strRutaResources+"img/hsv.jpg",mImgHSVLocal);
-        this.iImagenPreProcesada=this.mat2Image(mImgHSVLocal);
-        this.mImagenPreProcesada=mImgHSVLocal;
+        Imgcodecs.imwrite(strRutaResources+"img/hsv.jpg",mImgHSVLocal);        
+        
+        
+        this.lstCanalesHSV= new ArrayList<>();
+        Core.split(mImgHSVLocal,lstCanalesHSV);
+        Mat mImagenBinarizadaLocal = new Mat();
+        Imgproc.threshold(lstCanalesHSV.get(2), mImagenBinarizadaLocal, 127, 255, Imgproc.THRESH_TOZERO_INV);
+        Imgcodecs.imwrite(strRutaResources+"img/binarizada.jpg",mImagenBinarizadaLocal);
+        this.mImagenBinarizada=mImagenBinarizadaLocal;
+        
+        this.iImagenPreProcesada=this.mat2Image(mImagenBinarizadaLocal);//mImgHSVLocal
+        this.mImagenPreProcesada=mImagenBinarizadaLocal;//mImgHSVLocal
         // show the result of the transformation as an mImagenReal
-        this.ivImagenPreProcesada.setImage(this.mat2Image(mImgHSVLocal));
+        this.ivImagenPreProcesada.setImage(this.mat2Image(mImagenBinarizadaLocal));//mImgHSVLocal
         // set a fixed width
         this.ivImagenOriginal.fitHeightProperty().bind(this.hbImagenPreProcesada.heightProperty());
         this.ivImagenPreProcesada.fitHeightProperty().bind(this.hbImagenPreProcesada.heightProperty());
@@ -386,9 +319,8 @@ public class FXMLDemoController{
         hbImagenPreProcesada.getChildren().add(ivImagenPreProcesada);
     }
     
+    //ya no se usara este tab
     private void FaseOpeMorfologica() {
-        this.lstCanalesHSV= new ArrayList<>();
-        Core.split(this.mImagenPreProcesada,lstCanalesHSV);
         
         Imgcodecs.imwrite(strRutaResources+"img/H.jpg",lstCanalesHSV.get(0));        
         Imgcodecs.imwrite(strRutaResources+"img/S.jpg",lstCanalesHSV.get(1));
@@ -418,10 +350,139 @@ public class FXMLDemoController{
         this.gPaneSegmentar.add(this.ivImagenH, 0, 1);
         this.gPaneSegmentar.add(this.ivImagenS, 0, 2);        
         this.gPaneSegmentar.add(this.ivImagenV, 0, 3);
-
-
     }
     
+    //@FXML
+    protected void SegmentarImagen() throws IOException {
+        
+        /*Erosiona Binaria*/
+        ImageView ivErosion = new ImageView(); 
+        int tamañoErosion = 5;
+        Mat mElementoErosion = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE
+                ,new Size( 2*tamañoErosion + 1, 2*tamañoErosion+1 ));
+        
+        Mat mImgErode = new Mat();
+        Imgproc.erode(this.mImagenBinarizada, mImgErode,mElementoErosion);
+        
+        this.lstImgErosion= new ArrayList<>();
+        this.lstImgErosion.add(mImgErode);
+
+        ivErosion.setImage(this.mat2Image(mImgErode));
+        ivErosion.setFitWidth(200);
+        ivErosion.setPreserveRatio(true);
+        
+        //this.gPaneSegmentar.add(ivErosion, 1, 0);
+        
+        /*Dilatar Binaria*/
+        ImageView ivDilatar = new ImageView(); 
+
+        int tamañoDilatacion = 5;
+        Mat mElementoDilatacion = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE
+                ,new Size( 2*tamañoDilatacion + 1, 2*tamañoDilatacion+1 ));
+        Mat mImgDilatar = new Mat();
+        
+        Imgproc.erode(this.lstImgErosion.get(0), mImgDilatar,mElementoDilatacion);
+        
+        ivDilatar.setImage(this.mat2Image(mImgDilatar));
+        ivDilatar.setFitWidth(200);
+        ivDilatar.setPreserveRatio(true);
+        
+        //this.gPaneSegmentar.add(ivDilatar, 2, 0);
+        
+        ImageView ivImgBinarizada = new ImageView();
+        ivImgBinarizada.setImage(this.mat2Image(this.mImagenBinarizada));
+        ivImgBinarizada.setFitWidth(200);
+        ivImgBinarizada.setPreserveRatio(true);
+        
+        /*Fin operaciones morfologicas*/
+        hbImagenSegmentada.getChildren().add(ivImgBinarizada);
+        hbImagenSegmentada.getChildren().add(ivErosion);
+        hbImagenSegmentada.getChildren().add(ivDilatar);
+        //hbImagenSegmentada.getChildren().add(this.ivImagenCirculos);
+        
+    }
+    
+    private void DescribirImagen() {
+        int scale = 1, delta = -10,ddepth = CV_16S;
+        
+        Mat grad_x = new Mat(), grad_y = new Mat();
+        Mat abs_grad_x =new Mat(), abs_grad_y =new Mat();
+        
+        //ImageView ivlGrayScaleImage = new ImageView();
+        /*this.lstCanalesHSV= new ArrayList<>();
+        Core.split(this.mImagenPreProcesada,lstCanalesHSV);
+        */
+        //Mat mImagenSuavizada = new Mat();
+        Mat mImagenSegmentadaLocal = new Mat();        
+        //Mat mImagenBinarizadaLocal = new Mat();
+        //Mat mImagenSalidaInRange = new Mat();    
+        Mat mClonImagenReal = this.mImagenReal;
+
+        //this.lstCanalesHSV.get(2);
+        //mImagenSalidaInRange=this.lstCanalesHSV.get(2);//this.mImagenPreProcesada;
+        //Imgproc.cvtColor(this.mImagenPreProcesada, mImagenSalidaInRange, Imgproc);
+        //Core.inRange(this.mImagenPreProcesada, new Scalar(53, 87,43), new Scalar(159, 255, 178), mImagenSalidaInRange);
+        
+        //Imgproc.GaussianBlur( this.mImagenGris, mImagenSuavizada, this.s ,0,0, BORDER_DEFAULT );
+        //Imgproc.threshold(mImagenSuavizada, mImagenBinarizadaLocal, 127, 255, Imgproc.THRESH_TOZERO);
+        //ya tengo esto en mImgBinarizada
+        
+        //sobel
+        /*Imgproc.Sobel(mImagenBinarizadaLocal, grad_x ,ddepth,1,0,3,scale,delta,Core.BORDER_DEFAULT);  
+        convertScaleAbs( grad_x, abs_grad_x );
+        Imgproc.Sobel(mImagenBinarizadaLocal, grad_y ,ddepth,0,1,3,scale,delta,Core.BORDER_DEFAULT);
+        convertScaleAbs( grad_y, abs_grad_y );
+        
+        Core.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, mImagenSegmentadaLocal);
+        
+        
+        
+        Imgcodecs.imwrite(strRutaResources+"img/sobel.jpg",mImagenSegmentadaLocal);
+        */
+        //cany
+        //Imgproc.Canny(mImagenSuavizada, mImagenSuavizada ,100,700,5,true);        
+        //Imgcodecs.imwrite(strRutaResources+"img/canny.jpg",mImagenSuavizada);
+
+        Mat circles= new Mat();
+        int minRadius = 10;//10
+	int maxRadius = 290;//18
+        Imgproc.HoughCircles(this.mImagenBinarizada, circles,Imgproc.CV_HOUGH_GRADIENT,1, 
+                            200, 150, 30, minRadius, maxRadius);//mImagenSegmentadaLocal
+        //Imgproc.HoughCircles(mImagenSegmentadaLocal, circles,Imgproc.CV_HOUGH_GRADIENT,1, minRadius, 120, 10, minRadius, maxRadius);
+
+        for( int i = 0; i < circles.cols(); i++ )
+	{
+            double vCircle[]=circles.get(0,i);
+            Point center=new Point(Math.round(vCircle[0]), Math.round(vCircle[1]));
+            int radius = (int)Math.round(vCircle[2]);
+            // draw the circle center
+            Imgproc.circle(mClonImagenReal, center, 3,new Scalar(0,255,0), -1, 8, 0 );
+            //(mImagenSuavizada, center, 3,sc1new Scalar(0,255,0), -1, 8, 0 )
+            // draw the circle outline
+            Imgproc.circle(mClonImagenReal, center, radius, new Scalar(0,0,255),3, 8, 0 );
+            System.out.println(vCircle[0]+" : "+vCircle[1]+" : "+vCircle[2]);//el tercero es el radio en px
+	}
+        Imgcodecs.imwrite(strRutaResources+"img/deteccionCirculo.jpg",mClonImagenReal);
+        //fin dibujar circulos
+        System.out.println("circulos: "+ circles.cols());
+        //System.out.println(mImagenSalidaInRange.rows()/8);
+        //ivlGrayScaleImage.setImage(this.mat2Image(this.lstCanalesHSV.get(2)));
+        //this.ivImagenSegmentada.setImage(this.mat2Image(mImagenSegmentadaLocal));//mImagenSegmentadaLocal
+        this.ivImagenCirculos.setImage(this.mat2Image(mClonImagenReal));
+        //this.ivImagenSegmentada.fitHeightProperty().bind(this.hbImagenSegmentada.heightProperty());
+        //this.ivImagenPreProcesada.fitHeightProperty().bind(this.hbImagenSegmentada.heightProperty());
+        //this.ivImagenPreProcesada.setFitWidth(300);
+        //this.ivImagenSegmentada.setFitWidth(300);
+        this.ivImagenCirculos.setFitWidth(300);
+        //ivlGrayScaleImage.setFitWidth(300);        
+        //ivlGrayScaleImage.setPreserveRatio(true);    
+        //this.ivImagenSegmentada.setPreserveRatio(true);   
+        this.ivImagenCirculos.setPreserveRatio(true);   
+
+        //hbImagenDescripcion.getChildren().add(this.ivImagenPreProcesada);
+        //hbImagenDescripcion.getChildren().add(this.ivImagenSegmentada);
+        hbImagenDescripcion.getChildren().add(this.ivImagenCirculos);
+    }
     
     //<editor-fold defaultstate="collapsed" desc="GET - SET">
     public void setStage(Stage stage)
@@ -453,6 +514,8 @@ public class FXMLDemoController{
         return new Image(new ByteArrayInputStream(buffer.toArray()));
     }
 //</editor-fold>
+
+
     
     
 }
