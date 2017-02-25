@@ -97,11 +97,13 @@ public class FXMLDemoController{
     private Scene scene;
     private Stage stage;
     private final FileChooser fileChooser;
-    private Mat mImagenReal;      
+    private Mat mImagenReal;  
+    private Mat mImagenRealRedimensionada;      
+     
     private Mat mImagenHSV;   
  
     private Mat mImagenGris;   
-    private Mat mImagenPreProcesada;    
+    private Mat mImagenSuavizada;    
     private Mat mImagenBinarizada;
 
     private final List<Mat> planes;
@@ -132,9 +134,13 @@ public class FXMLDemoController{
         
         this.fileChooser= new FileChooser();
         // support variables
-        this.mImagenReal= new Mat();        
+        this.mImagenReal= new Mat();              
+        this.mImagenRealRedimensionada= new Mat();  
+        this.mImagenBinarizada=new Mat();
+        this.mImagenSuavizada= new Mat();
         this.mImagenGris= new Mat();
-
+        this.mImagenHSV= new Mat();
+        
         this.planes= new ArrayList<>();
         // the final complex mImagenReal
         this.complexImage=new Mat();
@@ -144,7 +150,7 @@ public class FXMLDemoController{
         File f = new File(this.strRutaResources+"css/DemoStyle.css");
         scene.getStylesheets().clear();
         this.scene.getStylesheets().add("file:///"+f.getAbsolutePath().replace("\\", "/"));
-        this.s= new Size(9,9);
+        this.s= new Size(3,3);
     }
     
 //</editor-fold>
@@ -166,7 +172,6 @@ public class FXMLDemoController{
             this.ivImagenOriginal.setStyle("margin-top:10px");
             
             this.vbImagenOriginal.getChildren().add(ivImagenOriginal);
-             
         }
     }
     
@@ -195,54 +200,58 @@ public class FXMLDemoController{
     }
    
     private void PreProcesarImagen() throws IOException {
-        //corregir metodo de redimensionamiento, para que mantenga aspect ratio
-        Size size= new Size(300,300);
-        Mat mImgRealRedimensionada= this.mImagenReal;//new Mat();
-        //Imgproc.resize(this.mImagenReal, mImgRealRedimensionada, size);
+        /*
+        1. redimensionar
+        2. suavizar: gaussianblur
+        3. HSV
+        */        
+        //1. REDIMENSION
+        double ratio=this.mImagenReal.size().width/this.mImagenReal.size().height;
+        int area=10000;
+        double altura=Math.sqrt(area/(ratio));
+        double anchura=altura*ratio;
+        Size size= new Size(anchura,altura);
+        Imgproc.resize(this.mImagenReal, this.mImagenRealRedimensionada, size);
+        Imgcodecs.imwrite(strRutaResources+"img/redimension.jpg",this.mImagenRealRedimensionada); 
         
-        Mat mImgHSVLocal = new Mat();//bfImage.getHeight(), bfImage.getWidth(), CvType.CV_8UC3);
-       
-        Imgproc.cvtColor(mImgRealRedimensionada, mImgHSVLocal, Imgproc.COLOR_BGR2HSV);
-        Imgcodecs.imwrite(strRutaResources+"img/hsv.jpg",mImgHSVLocal);        
-        this.mImagenHSV=mImgHSVLocal;
-        
-        this.lstCanalesHSV= new ArrayList<>();
-        Core.split(mImgHSVLocal,lstCanalesHSV);
-        
-        Scalar minVerde = new Scalar(29, 86, 6);        
-        Scalar maxVerde = new Scalar(64, 255, 255);
+        //2. SUAVIZAR
+        Imgproc.GaussianBlur(this.mImagenRealRedimensionada, this.mImagenSuavizada, this.s ,0,0, BORDER_DEFAULT );
+        Imgcodecs.imwrite(strRutaResources+"img/suavizado.jpg",this.mImagenSuavizada); 
+     
+        //3. HSV
+        Imgproc.cvtColor(this.mImagenSuavizada, this.mImagenHSV, Imgproc.COLOR_BGR2HSV);
+        Imgcodecs.imwrite(strRutaResources+"img/hsv.jpg",this.mImagenHSV);        
 
-        Mat mImagenBinarizadaLocal = new Mat();
-        Core.inRange(mImgHSVLocal, minVerde, maxVerde, mImagenBinarizadaLocal);
-        Imgcodecs.imwrite(strRutaResources+"img/binarizada.jpg",mImagenBinarizadaLocal);
-        this.mImagenBinarizada=mImagenBinarizadaLocal;
-        
-        this.iImagenPreProcesada=this.mat2Image(mImagenBinarizadaLocal);//mImgHSVLocal
-        this.mImagenPreProcesada=mImagenBinarizadaLocal;//mImgHSVLocal
-        // show the result of the transformation as an mImagenReal
-        this.ivImagenPreProcesada.setImage(this.mat2Image(mImagenBinarizadaLocal));//mImgHSVLocal        
-        this.ivImagenHSV.setImage(this.mat2Image(mImgHSVLocal));//mImgHSVLocal
+        //MOSTRAR RESULTADOS
+        this.iImagenPreProcesada=this.mat2Image(this.mImagenSuavizada);
+        this.ivImagenPreProcesada.setImage(this.mat2Image(this.mImagenSuavizada));     
+        this.ivImagenHSV.setImage(this.mat2Image(this.mImagenHSV));
 
-        // set a fixed width
-        this.ivImagenOriginal.fitHeightProperty().bind(this.hbImagenPreProcesada.heightProperty());
-        this.ivImagenPreProcesada.fitHeightProperty().bind(this.hbImagenPreProcesada.heightProperty());        
-        this.ivImagenHSV.fitHeightProperty().bind(this.hbImagenPreProcesada.heightProperty());
-
-        this.ivImagenOriginal.setFitWidth(400);
+        //this.ivImagenOriginal.setFitWidth(400);
         this.ivImagenPreProcesada.setFitWidth(400);
         this.ivImagenPreProcesada.setPreserveRatio(true); 
         
         this.ivImagenHSV.setFitWidth(400);
         this.ivImagenHSV.setPreserveRatio(true); 
 
-        hbImagenPreProcesada.getChildren().add(ivImagenOriginal);        
+        //hbImagenPreProcesada.getChildren().add(ivImagenOriginal);        
         hbImagenPreProcesada.getChildren().add(ivImagenPreProcesada);  
         hbImagenPreProcesada.getChildren().add(ivImagenHSV);
     }
     
-    //@FXML
     protected void SegmentarImagen() throws IOException {
-        /*Erosiona Binaria*/
+        /*
+        1. Binarizar
+        2. OM: Erosionar
+        3. OM: Dilatar
+        */
+        //1. Binarizar
+        Scalar minVerde = new Scalar(29, 86, 6);        
+        Scalar maxVerde = new Scalar(64, 255, 255);
+        Core.inRange(this.mImagenHSV, minVerde, maxVerde, this.mImagenBinarizada);
+        Imgcodecs.imwrite(strRutaResources+"img/binarizada.jpg",this.mImagenBinarizada);
+
+        //2. Erosiona Binaria
         ImageView ivErosion = new ImageView(); 
         int tamañoErosion = 1;
         Mat mElementoErosion = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE
@@ -250,57 +259,48 @@ public class FXMLDemoController{
         
         Mat mImgErode = new Mat();
         Imgproc.erode(this.mImagenBinarizada, mImgErode,mElementoErosion);
-        
-        this.lstImgErosion= new ArrayList<>();
-        this.lstImgErosion.add(mImgErode);
 
-        ivErosion.setImage(this.mat2Image(mImgErode));
-        ivErosion.setFitWidth(200);
-        ivErosion.setPreserveRatio(true);
-        
-        /*Dilatar Binaria*/
+        //3. Dilatar Binaria
         ImageView ivDilatar = new ImageView(); 
         int tamañoDilatacion = 2;
         Mat mElementoDilatacion = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE
                 ,new Size( 2*tamañoDilatacion + 1, 2*tamañoDilatacion+1 ));
         Mat mImgDilatar = new Mat();
         
-        Imgproc.dilate(this.lstImgErosion.get(0), mImgDilatar,mElementoDilatacion);
-        
+        Imgproc.dilate(mImgErode, mImgDilatar,mElementoDilatacion);
+       
+        //MOSTRAR RESULTADOS
+        ivErosion.setImage(this.mat2Image(mImgErode));
+        ivErosion.setPreserveRatio(true);
         ivDilatar.setImage(this.mat2Image(mImgDilatar));
-        ivDilatar.setFitWidth(200);
         ivDilatar.setPreserveRatio(true);
-
         ImageView ivImgBinarizada = new ImageView();
         ivImgBinarizada.setImage(this.mat2Image(this.mImagenBinarizada));
-        ivImgBinarizada.setFitWidth(200);
         ivImgBinarizada.setPreserveRatio(true);
+            
+        ivImgBinarizada.setFitWidth(400);
+        ivErosion.setFitWidth(400);
+        ivDilatar.setFitWidth(400);
         
-        /*Fin operaciones morfologicas*/
         hbImagenSegmentada.getChildren().add(ivImgBinarizada);
         hbImagenSegmentada.getChildren().add(ivErosion);
         hbImagenSegmentada.getChildren().add(ivDilatar);
-        //hbImagenSegmentada.getChildren().add(this.ivImagenCirculos);
     }
-    
-    public static final double M_PI = 3.14159265358979323846;
+
     public static final double MIN_AREA = 100.00;
     public static final double MAX_TOL = 200.00;
 
     private void DescribirImagen() {
-        Mat mClonImagenReal = this.mImagenReal;
+        Mat mClonImagenReal = this.mImagenRealRedimensionada;
 
         List<MatOfPoint> circles;
         circles = new ArrayList<MatOfPoint>();
        
         Mat mHierarchy= new Mat();
-        //List<MatOfPoint> mContours = new ArrayList<MatOfPoint>(); 
-        //double mMinContourArea = 0.1; 
+     
         Imgproc.findContours(this.mImagenBinarizada, circles,mHierarchy
                 , Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-        //INVESTIGAR CMO FILTRAR MALOS CONTORNOS
-        Mat mElipse= new Mat();
-        
+
          for( int i = 0; i< circles.size(); i++ )
         {
             double actual_area = Math.abs(Imgproc.contourArea(circles.get(i)));
@@ -315,33 +315,15 @@ public class FXMLDemoController{
             if (error > MAX_TOL) continue;
             
             System.out.printf("center x: %d y: %d A: %d B: %d\n", rect.x + A, rect.y + B, A, B);
-            
-            /*mElipse= Imgproc.moments(circles.get(i));
-            Point center = new Point();
-            
-            center.x= mElipse.get_m10()/ mElipse.get_m00;
-            center.y= mElipse.get_m01()/ mElipse.get_m00;
-          
-            //mElipse=Imgproc.moments(mMoments)
-            
-            
-            /*MatOfPoint2f temp=new MatOfPoint2f(mHierarchy);   
-            RotatedRect elipse= Imgproc.fitEllipse(temp) ;
-            //Imgproc.matchShapes(mHierarchy, elipse, 1, 0);//(mHierarchy,elipse, 1, 0.0)<1
-            //if(elipse.size.height)
-            //{*/
-            
+           
             Scalar color = new Scalar( 0,255,255);
-            Imgproc.drawContours( mClonImagenReal, circles, i, color, 2, 8, mHierarchy, 0, new Point() );
-            //}
-        }
-               
+            Imgproc.drawContours( mClonImagenReal, circles, i, color, 1, 8, mHierarchy, 0, new Point() );
+        }     
         Imgcodecs.imwrite(strRutaResources+"img/deteccionCirculo.jpg",mClonImagenReal);
-        //fin dibujar circulos
+
         
-        //System.out.println("circulos: "+ circles.cols());
         this.ivImagenCirculos.setImage(this.mat2Image(mClonImagenReal));
-        this.ivImagenCirculos.setFitWidth(300);
+        this.ivImagenCirculos.setFitWidth(400);
         this.ivImagenCirculos.setPreserveRatio(true);   
         hbImagenDescripcion.getChildren().add(this.ivImagenCirculos);
     }
