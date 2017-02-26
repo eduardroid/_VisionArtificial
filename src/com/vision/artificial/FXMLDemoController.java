@@ -81,6 +81,8 @@ public class FXMLDemoController{
     @FXML
     private HBox hbImagenDescripcion;
     @FXML
+    private HBox hbImagenReconocimiento;
+    @FXML
     private Button btnCargarImagen;
     
     @FXML 
@@ -207,12 +209,14 @@ public class FXMLDemoController{
         */        
         //1. REDIMENSION
         double ratio=this.mImagenReal.size().width/this.mImagenReal.size().height;
-        int area=10000;
+        int area=500000;
         double altura=Math.sqrt(area/(ratio));
         double anchura=altura*ratio;
         Size size= new Size(anchura,altura);
         Imgproc.resize(this.mImagenReal, this.mImagenRealRedimensionada, size);
         Imgcodecs.imwrite(strRutaResources+"img/redimension.jpg",this.mImagenRealRedimensionada); 
+        
+        //this.mImagenRealRedimensionada=this.mImagenReal;
         
         //2. SUAVIZAR
         Imgproc.GaussianBlur(this.mImagenRealRedimensionada, this.mImagenSuavizada, this.s ,0,0, BORDER_DEFAULT );
@@ -221,7 +225,12 @@ public class FXMLDemoController{
         //3. HSV
         Imgproc.cvtColor(this.mImagenSuavizada, this.mImagenHSV, Imgproc.COLOR_BGR2HSV);
         Imgcodecs.imwrite(strRutaResources+"img/hsv.jpg",this.mImagenHSV);        
-
+        this.lstCanalesHSV= new ArrayList<>();
+        Core.split(this.mImagenHSV,this.lstCanalesHSV);
+        Imgcodecs.imwrite(strRutaResources+"img/H.jpg",this.lstCanalesHSV.get(0));        
+        Imgcodecs.imwrite(strRutaResources+"img/S.jpg",this.lstCanalesHSV.get(1));
+        Imgcodecs.imwrite(strRutaResources+"img/V.jpg",this.lstCanalesHSV.get(2));
+        
         //MOSTRAR RESULTADOS
         this.iImagenPreProcesada=this.mat2Image(this.mImagenSuavizada);
         this.ivImagenPreProcesada.setImage(this.mat2Image(this.mImagenSuavizada));     
@@ -317,7 +326,7 @@ public class FXMLDemoController{
             System.out.printf("center x: %d y: %d A: %d B: %d\n", rect.x + A, rect.y + B, A, B);
            
             Scalar color = new Scalar( 0,255,255);
-            Imgproc.drawContours( mClonImagenReal, circles, i, color, 1, 8, mHierarchy, 0, new Point() );
+            Imgproc.drawContours( mClonImagenReal, circles, i, color, 2, 8, mHierarchy, 0, new Point() );
         }     
         Imgcodecs.imwrite(strRutaResources+"img/deteccionCirculo.jpg",mClonImagenReal);
 
@@ -325,11 +334,36 @@ public class FXMLDemoController{
         this.ivImagenCirculos.setImage(this.mat2Image(mClonImagenReal));
         this.ivImagenCirculos.setFitWidth(400);
         this.ivImagenCirculos.setPreserveRatio(true);   
-        hbImagenDescripcion.getChildren().add(this.ivImagenCirculos);
+        this.hbImagenDescripcion.getChildren().add(this.ivImagenCirculos);
     }
     
     private void ReconocerImagen() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Mat mClonImagenReal = this.mImagenRealRedimensionada;
+        Mat circles= new Mat();
+        int minRadius = 10;//10
+	int maxRadius = 250;//18
+        Imgproc.HoughCircles(this.lstCanalesHSV.get(1), circles,Imgproc.CV_HOUGH_GRADIENT,1, 
+                            200, 150, 30, minRadius, maxRadius);//this.mImagenBinarizada
+        //Imgproc.HoughCircles(mImagenSegmentadaLocal, circles,Imgproc.CV_HOUGH_GRADIENT,1, minRadius, 120, 10, minRadius, maxRadius);
+
+        for( int i = 0; i < circles.cols(); i++ )
+	{
+            double vCircle[]=circles.get(0,i);
+            Point center=new Point(Math.round(vCircle[0]), Math.round(vCircle[1]));
+            int radius = (int)Math.round(vCircle[2]);
+            // draw the circle center
+            Imgproc.circle(mClonImagenReal, center, 3,new Scalar(0,255,0), -1, 8, 0 );
+            //(mImagenSuavizada, center, 3,sc1new Scalar(0,255,0), -1, 8, 0 )
+            // draw the circle outline
+            Imgproc.circle(mClonImagenReal, center, radius, new Scalar(0,0,255),3, 8, 0 );
+            System.out.println(vCircle[0]+" : "+vCircle[1]+" : "+vCircle[2]);//el tercero es el radio en px
+	}
+        Imgcodecs.imwrite(strRutaResources+"img/deteccionDiametro.jpg",mClonImagenReal);
+        //fin dibujar circulos
+        System.out.println("circulos: "+ circles.cols());
+        //System.out.println(mImagenSalidaInRange.rows()/8);
+        this.ivImagenCirculos.setImage(this.mat2Image(mClonImagenReal));
+        this.hbImagenReconocimiento.getChildren().add(this.ivImagenCirculos);
     }
     //<editor-fold defaultstate="collapsed" desc="GET - SET">
     public void setStage(Stage stage)

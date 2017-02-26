@@ -94,7 +94,14 @@
                      </center>
                   </BorderPane>
                </content></Tab>
-            <Tab text="Reconocimiento e Interpretación" />
+            <Tab text="Reconocimiento e Interpretación">
+               <content>
+                  <BorderPane prefHeight="200.0" prefWidth="200.0">
+                     <center>
+                        <HBox fx:id="hbImagenReconocimiento" prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+                     </center>
+                  </BorderPane>
+               </content></Tab>
         </tabs>
       </TabPane>
    </children>
