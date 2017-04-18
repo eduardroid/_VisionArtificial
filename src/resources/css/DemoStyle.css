@@ -26,7 +26,7 @@
     -fx-alignment: CENTER;
     -fx-text-fill: #4d4d4d;
     -fx-font-size: 15px;
-    -fx-font-weight: 0px;
+    /*-fx-font-weight: 0px;*/
 }
 
 .tab:selected .tab-label { 

@@ -64,6 +64,18 @@ public class VisionArtificialMain extends Application {
             rootLayout.setCenter(demoOverview);
             //d.setStage(windows);
     }
+    
+    public static void showFullExecutionOverview() throws IOException {
+      
+            // Load person overview.
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(VisionArtificialMain.class.getResource("view/FXMLFullExecution.fxml"));
+            AnchorPane demoOverview = (AnchorPane) loader.load();
+            FXMLDemoController d = new FXMLDemoController();
+            rootLayout.setCenter(demoOverview);
+            //d.setStage(windows);
+    }
+    
     public Stage getWindows() {
         return windows;
     }
