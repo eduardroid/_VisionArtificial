@@ -345,7 +345,7 @@ public class FXMLDemoController{
         Imgproc.HoughCircles(this.lstCanalesHSV.get(1), circles,Imgproc.CV_HOUGH_GRADIENT,1, 
                             200, 150, 30, minRadius, maxRadius);//this.mImagenBinarizada
         //Imgproc.HoughCircles(mImagenSegmentadaLocal, circles,Imgproc.CV_HOUGH_GRADIENT,1, minRadius, 120, 10, minRadius, maxRadius);
-
+        double diametro=0;
         for( int i = 0; i < circles.cols(); i++ )
 	{
             double vCircle[]=circles.get(0,i);
@@ -357,13 +357,42 @@ public class FXMLDemoController{
             // draw the circle outline
             Imgproc.circle(mClonImagenReal, center, radius, new Scalar(0,0,255),3, 8, 0 );
             System.out.println(vCircle[0]+" : "+vCircle[1]+" : "+vCircle[2]);//el tercero es el radio en px
+            diametro=vCircle[2]*2*0.26454;
 	}
         Imgcodecs.imwrite(strRutaResources+"img/deteccionDiametro.jpg",mClonImagenReal);
         //fin dibujar circulos
         System.out.println("circulos: "+ circles.cols());
+        
+        if(diametro>=58 && diametro<=67)
+        {
+            System.out.println("Calibre 1: "+diametro);
+        }
+        if(diametro>=53 && diametro<=62)
+        {
+            System.out.println("Calibre 2: "+diametro);
+        }
+        if(diametro>=48 && diametro<=57)
+        {
+            System.out.println("Calibre 3: "+diametro);
+        }
+        if(diametro>=45 && diametro<=52)
+        {
+            System.out.println("Calibre 4: "+diametro);
+        }
+        if(diametro>=42 && diametro<=59)
+        {
+            System.out.println("Calibre 5: "+diametro);
+        }
+        if(diametro>=42 && diametro<=59)
+        {
+            System.out.println("Calibre no encontrado : "+diametro);
+        }
+
         //System.out.println(mImagenSalidaInRange.rows()/8);
         this.ivImagenCirculos.setImage(this.mat2Image(mClonImagenReal));
         this.hbImagenReconocimiento.getChildren().add(this.ivImagenCirculos);
+        
+        
     }
     //<editor-fold defaultstate="collapsed" desc="GET - SET">
     public void setStage(Stage stage)
